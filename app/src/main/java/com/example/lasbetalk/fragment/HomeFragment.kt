@@ -15,6 +15,8 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 
+import com.example.lasbetalk.GpsActivity // 추가
+
 class HomeFragment : Fragment() {
     companion object {
         fun newInstance(): HomeFragment {
@@ -48,6 +50,16 @@ class HomeFragment : Fragment() {
             startActivity(intent)
         }
 
+        // 갱 추가
+        val mapButton: Button = view.findViewById(R.id.mapBtn)
+        mapButton.setOnClickListener {
+            val intent = Intent(activity, GpsActivity::class.java)
+            startActivity(intent)
+
+        }
+
         return view
     }
+
+
 }
