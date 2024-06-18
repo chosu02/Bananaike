@@ -25,9 +25,11 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.gms.tasks.OnSuccessListener
-
 
 class GpsActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
@@ -36,17 +38,21 @@ class GpsActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,
     lateinit var apiClient: GoogleApiClient
     var googleMap: GoogleMap? = null
     var currentLocation: Location? = null
+    var previousLocation: Location? = null
+    lateinit var locationCallback: LocationCallback
+    var polyline: Polyline? = null
+    var currentMarker: Marker? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_gps) // 레이아웃 파일 확인
+        setContentView(R.layout.activity_gps)
 
         val requestPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) {
-            if (it.all { permission -> permission.value == true }){
+            if (it.all { permission -> permission.value == true }) {
                 apiClient.connect()
-            }else {
+            } else {
                 Toast.makeText(this, "권한 거부..", Toast.LENGTH_SHORT).show()
             }
         }
@@ -61,53 +67,87 @@ class GpsActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,
             .addOnConnectionFailedListener(this)
             .build()
 
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
             )
         } else {
-            // 위치 제공자 준비하기
             apiClient.connect()
+        }
+
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                for (location in locationResult.locations) {
+                    updateLocation(location)
+                }
+            }
         }
     }
 
-    private fun moveMap(location: LatLng){
+    private fun updateLocation(location: Location) {
+        previousLocation = currentLocation
+        currentLocation = location
+
+        if (googleMap != null) {
+            val latLng = LatLng(location.latitude, location.longitude)
+            moveMap(latLng)
+
+            previousLocation?.let {
+                val previousLatLng = LatLng(it.latitude, it.longitude)
+                if (polyline == null) {
+                    polyline = googleMap?.addPolyline(
+                        PolylineOptions().add(previousLatLng, latLng).color(android.graphics.Color.BLUE)
+                    )
+                } else {
+                    val points = polyline?.points?.toMutableList() ?: mutableListOf()
+                    points.add(latLng)
+                    polyline?.points = points
+                }
+            }
+        }
+    }
+
+    private fun moveMap(location: LatLng) {
         googleMap?.let { map ->
             val position: CameraPosition = CameraPosition.Builder()
                 .target(location)
-                .zoom(16f)
+                .zoom(18f)
                 .build()
-            // 지도 중심 이동하기
             map.moveCamera(CameraUpdateFactory.newCameraPosition(position))
-            // 마커 옵션
-            val markerOptions = MarkerOptions()
-            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-            markerOptions.position(location)
-            markerOptions.title("MyLocation")
-            // 마커 표시하기
-            map.addMarker(markerOptions)
+
+            if (currentMarker == null) {
+                val markerOptions = MarkerOptions()
+                markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                markerOptions.position(location)
+                markerOptions.title("MyLocation")
+                currentMarker = map.addMarker(markerOptions)
+            } else {
+                currentMarker?.position = location
+            }
         } ?: run {
             Log.e("GpsActivity", "GoogleMap 객체가 초기화되지 않았습니다.")
         }
     }
 
-    // 위치 제공자를 사용할 수 있는 상황일 때
     override fun onConnected(p0: Bundle?) {
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             providerClient.lastLocation.addOnSuccessListener(this, OnSuccessListener<Location> { location ->
                 location?.let {
                     currentLocation = it
-                    Log.d("noh", "${currentLocation?.latitude}, ${currentLocation?.longitude}")
-                    currentLocation?.let {
-                        val latLng = LatLng(it.latitude, it.longitude)
-                        // 위치를 기반으로 지도 이동 및 마커 추가
-                        googleMap?.let { moveMap(latLng) }
-                    }
+                    val latLng = LatLng(it.latitude, it.longitude)
+                    moveMap(latLng)
                 }
             })
-            apiClient.disconnect()
+
+            val locationRequest = LocationRequest.create().apply {
+                interval = 10000
+                fastestInterval = 5000
+                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            }
+
+            providerClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
         }
     }
 
@@ -119,20 +159,15 @@ class GpsActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,
         // 사용할 수 있는 위치 제공자가 없을 때
     }
 
-    // 지도 객체를 이용할 수 있는 상황이 될 때
     override fun onMapReady(p0: GoogleMap) {
         googleMap = p0
-        if (googleMap == null) {
-            Log.e("GpsActivity", "GoogleMap 객체가 null입니다.")
-        } else {
-            currentLocation?.let {
-                val latLng = LatLng(it.latitude, it.longitude)
-                moveMap(latLng)
-            }
+        currentLocation?.let {
+            val latLng = LatLng(it.latitude, it.longitude)
+            moveMap(latLng)
         }
     }
-
 }
+
 
 /*
 import android.content.pm.PackageManager
