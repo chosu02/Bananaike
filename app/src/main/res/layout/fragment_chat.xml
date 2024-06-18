@@ -15,17 +15,19 @@
             android:layout_gravity="bottom"
             android:layout_marginLeft="15dp"
             android:layout_marginBottom="5dp"
-            android:fontFamily="cursive"
             android:text="바나나이크"
             android:textColor="@color/lasbeOrange"
             android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:fontFamily="@font/bmjua_ttf"
+            />
 
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatfragment_recyclerview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:fontFamily="@font/bmjua_ttf"/>
 
 </LinearLayout>

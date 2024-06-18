@@ -35,7 +35,8 @@
             app:layout_constraintBottom_toTopOf="@+id/profile_textview_name"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/profile_imageview" />
+            app:layout_constraintTop_toBottomOf="@+id/profile_imageview"
+            android:fontFamily="@font/bmjua_ttf"/>
 
         <EditText
             android:id="@+id/profile_textview_name"
@@ -50,7 +51,8 @@
             app:layout_constraintBottom_toTopOf="@+id/profile_button"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/profile_textview_email" />
+            app:layout_constraintTop_toBottomOf="@+id/profile_textview_email"
+            android:fontFamily="@font/bmjua_ttf"/>
 
         <Button
             android:id="@+id/profile_button"
@@ -64,7 +66,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.501"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/profile_textview_name" />
+            app:layout_constraintTop_toBottomOf="@+id/profile_textview_name"
+            android:fontFamily="@font/bmjua_ttf"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

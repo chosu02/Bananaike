@@ -44,7 +44,8 @@
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@+id/home_item_email"
             app:layout_constraintStart_toEndOf="@+id/home_item_iv"
-            app:layout_constraintTop_toTopOf="@+id/home_item_iv" />
+            app:layout_constraintTop_toTopOf="@+id/home_item_iv"
+            android:fontFamily="@font/bmjua_ttf"/>
 
         <TextView
             android:id="@+id/home_item_email"
@@ -57,7 +58,8 @@
             android:textColor="#8A252525"
             app:layout_constraintBottom_toBottomOf="@+id/home_item_iv"
             app:layout_constraintStart_toEndOf="@+id/home_item_iv"
-            app:layout_constraintTop_toBottomOf="@+id/home_item_tv" />
+            app:layout_constraintTop_toBottomOf="@+id/home_item_tv"
+            android:fontFamily="@font/bmjua_ttf"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
